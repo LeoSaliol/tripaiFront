@@ -9,7 +9,7 @@ import { trips } from "@/lib/api";
 import DayList from "@/components/DayList";
 import Modal from "@/components/Modal";
 import Toast from "@/components/Toast";
-import type { Trip } from "@/types";
+import type { Trip, Day, Stop } from "@/types";
 
 const budgetLabels: Record<string, string> = {
   low: "Bajo",
@@ -31,6 +31,19 @@ export default function TripDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showCopyToast, setShowCopyToast] = useState(false);
+  const [days, setDays] = useState<Day[]>([]);
+  const [originalDays, setOriginalDays] = useState<Day[]>([]);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [showSaveToast, setShowSaveToast] = useState(false);
+  const [saveOrderError, setSaveOrderError] = useState("");
+  const [dirtyDays, setDirtyDays] = useState<Set<number>>(new Set());
+  const [shareUrl, setShareUrl] = useState("");
+
+  useEffect(() => {
+    if (trip) {
+      setShareUrl(`${window.location.origin}/trip/${trip._id}`);
+    }
+  }, [trip?._id]);
 
   useEffect(() => {
     if (!id) return;
@@ -38,6 +51,8 @@ export default function TripDetailPage() {
       try {
         const data = await trips.get(id);
         setTrip(data);
+        setDays(data.days);
+        setOriginalDays(structuredClone(data.days));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al cargar el viaje");
       } finally {
@@ -58,6 +73,36 @@ export default function TripDetailPage() {
       setDeleteOpen(false);
     } finally {
       setDeleting(false);
+    }
+  }
+
+  function handleReorder(dayIndex: number, reorderedStops: Stop[]) {
+    setDays((prev) => {
+      const updated = [...prev];
+      updated[dayIndex] = { ...updated[dayIndex], stops: reorderedStops };
+      return updated;
+    });
+    setDirtyDays((prev) => {
+      const next = new Set(prev);
+      next.add(dayIndex);
+      return next;
+    });
+  }
+
+  async function handleSaveOrder() {
+    if (!trip) return;
+    setSavingOrder(true);
+    setSaveOrderError("");
+    try {
+      const updated = await trips.update(trip._id, { days });
+      setTrip(updated);
+      setOriginalDays(structuredClone(days));
+      setDirtyDays(new Set());
+      setShowSaveToast(true);
+    } catch (err) {
+      setSaveOrderError(err instanceof Error ? err.message : "Error al guardar el orden");
+    } finally {
+      setSavingOrder(false);
     }
   }
 
@@ -101,10 +146,6 @@ export default function TripDetailPage() {
   if (!trip) {
     return null;
   }
-
-  const shareUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/trip/${trip._id}`
-    : "";
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -201,17 +242,26 @@ export default function TripDetailPage() {
       <div className="mt-8 grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <DayList
-            days={trip.days}
+            days={days}
             focusStop={focusStop}
             onStopClick={(dayIndex, stopIndex) => setFocusStop({ dayIndex, stopIndex })}
+            draggable
+            onReorder={handleReorder}
+            dirtyDays={dirtyDays}
+            onSaveOrder={handleSaveOrder}
+            savingOrder={savingOrder}
+            saveOrderError={saveOrderError}
           />
         </div>
         <div className="lg:col-span-3">
           <div className="sticky top-20 rounded-xl border border-white/5 bg-brand-surface overflow-hidden">
-            <TripMap days={trip.days} focusStop={focusStop} />
+            <TripMap days={days} focusStop={focusStop} />
           </div>
         </div>
       </div>
+      <Toast open={showSaveToast} onClose={() => setShowSaveToast(false)} duration={2000}>
+        Cambios guardados
+      </Toast>
     </div>
   );
 }

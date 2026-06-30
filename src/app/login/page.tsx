@@ -20,7 +20,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const data = await auth.login({ email, password });
-      login(data.token, data.user);
+      login(data.user);
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al iniciar sesión");

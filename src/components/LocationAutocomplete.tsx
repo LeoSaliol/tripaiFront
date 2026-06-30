@@ -36,8 +36,7 @@ export default function LocationAutocomplete({
     }
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&accept-language=es`,
-        { headers: { "Accept-Language": "es" } }
+        `/api/geocode/search?q=${encodeURIComponent(query)}`
       );
       if (!res.ok) return;
       const data: Suggestion[] = await res.json();

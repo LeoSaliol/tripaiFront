@@ -67,9 +67,24 @@ export default function DashboardPage() {
       </div>
 
       {loading ? (
-        <div className="mt-16 flex flex-col items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-muted/30 border-t-brand-gold" />
-          <p className="mt-4 text-sm text-brand-muted">Cargando viajes...</p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-white/5 bg-brand-surface p-5 animate-pulse">
+              <div className="h-5 w-2/3 rounded bg-brand-dark" />
+              <div className="mt-3 flex flex-wrap gap-4">
+                <div className="h-4 w-20 rounded bg-brand-dark" />
+                <div className="h-4 w-16 rounded bg-brand-dark" />
+                <div className="h-4 w-24 rounded bg-brand-dark" />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <div className="h-5 w-16 rounded-md bg-brand-dark" />
+                <div className="h-5 w-20 rounded-md bg-brand-dark" />
+              </div>
+              <div className="mt-4">
+                <div className="h-9 w-28 rounded-lg bg-brand-dark" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div className="mt-8 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">

@@ -32,7 +32,7 @@ export default function RootLayout({
       lang="es"
       className={`${syne.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <AuthProvider>
           <Navbar />
           <main className="flex-1 flex flex-col">{children}</main>

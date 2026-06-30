@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAuth } from "@/components/AuthProvider";
@@ -38,6 +38,26 @@ export default function GeneratePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [focusStop, setFocusStop] = useState<{ dayIndex: number; stopIndex: number } | null>(null);
+  const [msgIndex, setMsgIndex] = useState(0);
+
+  const loadingMessages = [
+    "Consultando la inteligencia artificial...",
+    "Eligiendo los mejores lugares para vos...",
+    "Geocodificando las ubicaciones en el mapa...",
+    "Armando tu itinerario personalizado...",
+    "Casi listo, últimos detalles...",
+  ];
+
+  useEffect(() => {
+    if (!loading) {
+      setMsgIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setMsgIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   if (isLoading) {
     return (
@@ -74,7 +94,12 @@ export default function GeneratePage() {
       });
       setGeneratedTrip(data as unknown as Trip);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al generar el itinerario");
+      const apiErr = err as any;
+      if (apiErr.status === 503) {
+        setError(apiErr.message);
+      } else {
+        setError("Hay problemas con el servidor, intentelo nuevamente en 1 minuto");
+      }
     } finally {
       setLoading(false);
     }
@@ -233,14 +258,15 @@ export default function GeneratePage() {
       )}
 
       {loading && (
-        <div className="mt-16 flex flex-col items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-brand-muted/30 border-t-brand-gold" />
-          <p className="mt-4 text-sm text-brand-muted">
-            Generando tu itinerario personalizado...
+        <div className="flex flex-col items-center justify-center py-20 gap-6">
+          <div className="w-12 h-12 border-4 border-brand-surface border-t-brand-gold rounded-full animate-spin" />
+          <p className="text-brand-light text-lg font-medium text-center transition-all duration-500">
+            {loadingMessages[msgIndex]}
           </p>
-          <p className="mt-1 text-xs text-brand-muted/50">
-            Puede tardar entre 15 y 20 segundos
-          </p>
+          <div className="w-64 h-1 bg-brand-surface rounded-full overflow-hidden">
+            <div className="h-full bg-brand-gold rounded-full animate-pulse w-3/4" />
+          </div>
+          <p className="text-brand-muted text-sm">Esto puede tardar hasta 20 segundos</p>
         </div>
       )}
     </div>

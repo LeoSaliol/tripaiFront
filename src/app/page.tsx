@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function Home() {
+  const { isAuthenticated, isLoading } = useAuth();
   return (
     <div className="flex flex-1 flex-col">
       <section className="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center">
@@ -31,12 +35,21 @@ export default function Home() {
             >
               Crear mi itinerario
             </Link>
-            <Link
-              href="/register"
-              className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-brand-muted/40 px-8 text-base font-semibold text-brand-light hover:border-brand-muted hover:text-brand-gold transition-all sm:w-auto"
-            >
-              Crear cuenta gratis
-            </Link>
+            {!isLoading && isAuthenticated ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-brand-muted/40 px-8 text-base font-semibold text-brand-light hover:border-brand-muted hover:text-brand-gold transition-all sm:w-auto"
+              >
+                Ver mis viajes
+              </Link>
+            ) : (
+              <Link
+                href="/register"
+                className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-brand-muted/40 px-8 text-base font-semibold text-brand-light hover:border-brand-muted hover:text-brand-gold transition-all sm:w-auto"
+              >
+                Crear cuenta gratis
+              </Link>
+            )}
           </div>
         </div>
       </section>

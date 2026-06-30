@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import type { Trip } from "@/types";
 
@@ -11,12 +14,18 @@ interface TripCardProps {
   trip: Trip;
 }
 
+const MONTHS = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+
 export default function TripCard({ trip }: TripCardProps) {
-  const date = new Date(trip.createdAt).toLocaleDateString("es-AR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const [date, setDate] = useState("");
+
+  useEffect(() => {
+    const d = new Date(trip.createdAt);
+    setDate(`${d.getDate()} de ${MONTHS[d.getMonth()]} de ${d.getFullYear()}`);
+  }, [trip.createdAt]);
 
   return (
     <div className="rounded-xl border border-white/5 bg-brand-surface p-5 hover:border-brand-muted/20 transition-colors">

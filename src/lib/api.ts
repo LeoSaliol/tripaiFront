@@ -1,24 +1,18 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const API_URL = "/api";
 
 async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -26,11 +20,20 @@ async function request<T>(
     try {
       const text = await res.text();
       const parsed = JSON.parse(text);
-      message = parsed.message || parsed.error || parsed.errorMessage || text;
+      const err = parsed.error;
+      if (err && typeof err === "object" && err.message) {
+        message = err.message;
+      } else if (err && typeof err === "string") {
+        message = err;
+      } else {
+        message = parsed.message || parsed.errorMessage || text;
+      }
     } catch {
       message = res.statusText;
     }
-    throw new Error(message);
+    const error = new Error(message);
+    (error as any).status = res.status;
+    throw error;
   }
 
   return res.json();
@@ -38,13 +41,27 @@ async function request<T>(
 
 export const auth = {
   register: (body: { email: string; password: string; name: string }) =>
-    request<{ token: string; user: { _id: string; email: string; name: string } }>("/auth/register", {
+    request<{ user: { _id: string; email: string; name: string } }>("/auth/register", {
       method: "POST",
       body: JSON.stringify(body),
     }),
   login: (body: { email: string; password: string }) =>
-    request<{ token: string; user: { _id: string; email: string; name: string } }>("/auth/login", {
+    request<{ user: { _id: string; email: string; name: string } }>("/auth/login", {
       method: "POST",
+      body: JSON.stringify(body),
+    }),
+  me: () =>
+    request<{ user: { _id: string; email: string; name: string } }>("/auth/me"),
+  logout: () =>
+    request<{ message: string }>("/auth/logout", { method: "POST" }),
+  updateProfile: (body: { name?: string; email?: string; currentPassword?: string; newPassword?: string }) =>
+    request<{ user: { _id: string; email: string; name: string } }>("/users", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+  deleteAccount: (body: { password: string }) =>
+    request<void>("/users", {
+      method: "DELETE",
       body: JSON.stringify(body),
     }),
 };

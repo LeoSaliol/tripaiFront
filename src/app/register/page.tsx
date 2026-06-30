@@ -21,7 +21,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const data = await auth.register({ name, email, password });
-      login(data.token, data.user);
+      login(data.user);
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrarse");
