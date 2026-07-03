@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 interface Suggestion {
   display_name: string;
   lat: string;
@@ -36,7 +38,7 @@ export default function LocationAutocomplete({
     }
     try {
       const res = await fetch(
-        `/api/geocode/search?q=${encodeURIComponent(query)}`,
+        `${API_URL}/geocode/search?q=${encodeURIComponent(query)}`,
         { credentials: "include" }
       );
       if (!res.ok) return;
