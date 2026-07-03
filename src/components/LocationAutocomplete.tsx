@@ -36,7 +36,8 @@ export default function LocationAutocomplete({
     }
     try {
       const res = await fetch(
-        `/api/geocode/search?q=${encodeURIComponent(query)}`
+        `/api/geocode/search?q=${encodeURIComponent(query)}`,
+        { credentials: "include" }
       );
       if (!res.ok) return;
       const data: Suggestion[] = await res.json();
